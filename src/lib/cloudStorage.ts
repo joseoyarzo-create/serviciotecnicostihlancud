@@ -45,6 +45,18 @@ export const saveCliente = async (cliente: Cliente): Promise<void> => {
   }
 };
 
+export const deleteCliente = async (id: string): Promise<void> => {
+  const { error } = await supabase
+    .from('clientes')
+    .delete()
+    .eq('id', id);
+  
+  if (error) {
+    console.error('Error deleting cliente:', error);
+    throw error;
+  }
+};
+
 // Repuestos
 export const getRepuestos = async (): Promise<Repuesto[]> => {
   const all: any[] = [];

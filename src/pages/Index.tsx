@@ -145,7 +145,7 @@ const Index = () => {
         </section>
 
         {/* Quick Actions */}
-        <section className="grid md:grid-cols-2 gap-6 mb-12">
+        <section className="grid md:grid-cols-3 gap-6 mb-12">
           <Link to="/ficha-tecnica">
             <div className="form-section hover-lift cursor-pointer border-2 border-primary/20 hover:border-primary transition-colors animate-fade-in" style={{ animationDelay: '0.4s' }}>
               <div className="flex items-center gap-4">
@@ -153,8 +153,8 @@ const Index = () => {
                   <Plus className="h-8 w-8 text-primary-foreground" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">Nueva Ficha Técnica</h3>
-                  <p className="text-muted-foreground">Crear una nueva orden de servicio</p>
+                  <h3 className="text-xl font-bold">Nueva Ficha</h3>
+                  <p className="text-muted-foreground">Crear orden de servicio</p>
                 </div>
               </div>
             </div>
@@ -167,8 +167,22 @@ const Index = () => {
                   <Wrench className="h-8 w-8 text-secondary-foreground" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">Gestionar Repuestos</h3>
-                  <p className="text-muted-foreground">Importar, agregar o editar repuestos</p>
+                  <h3 className="text-xl font-bold">Repuestos</h3>
+                  <p className="text-muted-foreground">Gestionar inventario</p>
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          <Link to="/clientes">
+            <div className="form-section hover-lift cursor-pointer border-2 border-border hover:border-primary transition-colors animate-fade-in" style={{ animationDelay: '0.6s' }}>
+              <div className="flex items-center gap-4">
+                <div className="bg-secondary rounded-full p-4">
+                  <Users className="h-8 w-8 text-secondary-foreground" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Clientes</h3>
+                  <p className="text-muted-foreground">Gestionar directorio</p>
                 </div>
               </div>
             </div>
