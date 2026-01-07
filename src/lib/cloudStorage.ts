@@ -4,6 +4,10 @@ import type { Json } from '@/integrations/supabase/types';
 
 const PAGE_SIZE = 1000;
 
+export const generateId = (): string => {
+  return crypto.randomUUID();
+};
+
 // Clientes
 export const getClientes = async (): Promise<Cliente[]> => {
   const all: any[] = [];
