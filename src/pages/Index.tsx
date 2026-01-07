@@ -4,10 +4,11 @@ import { FichaTecnica } from '@/types';
 import { getFichas, getRepuestos, getClientes, deleteFicha } from '@/lib/cloudStorage';
 import { generateWordDocument } from '@/lib/generateWord';
 import { generatePdfDocument, printFicha } from '@/lib/generatePdf';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
-import { FileText, Package, Users, Wrench, Plus, Download, Trash2, Clock, FileDown, Printer } from 'lucide-react';
+import { FileText, Package, Users, Wrench, Plus, Download, Trash2, Clock, FileDown, Printer, Search, Edit } from 'lucide-react';
 import stihlLogo from '@/assets/stihl-logo.jpg';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -20,13 +21,28 @@ import {
 
 const Index = () => {
   const { toast } = useToast();
+  const [allFichas, setAllFichas] = useState<FichaTecnica[]>([]);
   const [fichas, setFichas] = useState<FichaTecnica[]>([]);
   const [stats, setStats] = useState({ repuestos: 0, clientes: 0, fichas: 0 });
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (searchTerm) {
+      const filtered = allFichas.filter(f => 
+        f.cliente.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(f.numeroServicio).includes(searchTerm) ||
+        (f.modeloMaquina && f.modeloMaquina.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      setFichas(filtered);
+    } else {
+      setFichas(allFichas.slice(0, 5));
+    }
+  }, [searchTerm, allFichas]);
 
   const loadData = async () => {
     setIsLoading(true);
