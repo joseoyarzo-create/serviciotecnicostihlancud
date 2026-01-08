@@ -174,16 +174,25 @@ const RepuestosPage = () => {
           }
         }
 
-        if (nuevosRepuestos.length > 0) {
-          await saveRepuestosBulk(nuevosRepuestos);
+        // Deduplicate by codigo (keep last occurrence)
+        const uniqueRepuestos = Array.from(
+          new Map(nuevosRepuestos.map(item => [item.codigo, item])).values()
+        );
+
+        if (uniqueRepuestos.length > 0) {
+          await saveRepuestosBulk(uniqueRepuestos);
           await loadRepuestos();
-          toast({ title: 'Éxito', description: `${nuevosRepuestos.length} repuestos importados correctamente` });
+          toast({ title: 'Éxito', description: `${uniqueRepuestos.length} repuestos importados correctamente` });
         } else {
           toast({ title: 'Aviso', description: 'No se encontraron repuestos válidos en el archivo', variant: 'destructive' });
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error parsing Excel:', error);
-        toast({ title: 'Error', description: 'Error al procesar el archivo Excel. Asegúrese de que sea un archivo válido.', variant: 'destructive' });
+        toast({ 
+          title: 'Error de importación', 
+          description: error.message || 'Error al procesar el archivo Excel. Asegúrese de que sea un archivo válido (.xlsx, .xls).', 
+          variant: 'destructive' 
+        });
       } finally {
         setIsImporting(false);
         // Reset file input
