@@ -14,6 +14,8 @@ const RepuestosPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -193,9 +195,16 @@ const RepuestosPage = () => {
   };
 
   const filteredRepuestos = repuestos.filter(
-    (r) =>
-      r.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.codigo.toLowerCase().includes(searchTerm.toLowerCase())
+    (r) => {
+      const matchesSearch = r.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.codigo.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const min = minPrice ? parseInt(minPrice) : 0;
+      const max = maxPrice ? parseInt(maxPrice) : Infinity;
+      const matchesPrice = r.precio >= min && r.precio <= max;
+
+      return matchesSearch && matchesPrice;
+    }
   );
 
   const totalPages = Math.ceil(filteredRepuestos.length / itemsPerPage);
