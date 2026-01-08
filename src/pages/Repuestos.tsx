@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { Repuesto } from '@/types';
-import { getRepuestos, saveRepuesto, saveRepuestosBulk, deleteRepuesto, generateId } from '@/lib/cloudStorage';
+import { getRepuestos, saveRepuesto, saveRepuestosBulk, deleteRepuesto, deleteAllRepuestos, generateId } from '@/lib/cloudStorage';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -194,6 +194,20 @@ const RepuestosPage = () => {
     }
   };
 
+  const handleDeleteAll = async () => {
+    if (window.confirm('¿ESTÁ SEGURO? Esto eliminará TODOS los repuestos de la base de datos. Esta acción no se puede deshacer.')) {
+      if (window.confirm('Confirme nuevamente que desea eliminar TODO el inventario de repuestos.')) {
+        try {
+          await deleteAllRepuestos();
+          await loadRepuestos();
+          toast({ title: 'Éxito', description: 'Todos los repuestos han sido eliminados' });
+        } catch (error) {
+          toast({ title: 'Error', description: 'Error al eliminar repuestos', variant: 'destructive' });
+        }
+      }
+    }
+  };
+
   const filteredRepuestos = repuestos.filter(
     (r) => {
       const matchesSearch = r.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -256,6 +270,14 @@ const RepuestosPage = () => {
               <p className="text-sm text-muted-foreground self-center">
                 Formato esperado: Código | Nombre | Precio (opcional, si no hay se asigna $1)
               </p>
+              <Button
+                onClick={handleDeleteAll}
+                variant="destructive"
+                className="hover-lift ml-auto"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Eliminar Todo
+              </Button>
             </div>
           </section>
 

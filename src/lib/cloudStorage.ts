@@ -132,6 +132,18 @@ export const deleteRepuesto = async (id: string): Promise<void> => {
   }
 };
 
+export const deleteAllRepuestos = async (): Promise<void> => {
+  const { error } = await supabase
+    .from('repuestos')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all rows
+  
+  if (error) {
+    console.error('Error deleting all repuestos:', error);
+    throw error;
+  }
+};
+
 // Modelos
 export const getModelos = async (): Promise<{ id: string; modelo: string }[]> => {
   const { data, error } = await supabase
