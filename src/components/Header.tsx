@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { FileText, Package, Home, LogOut, HelpCircle } from 'lucide-react';
+import { FileText, Package, Home, LogOut, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import stihlLogo from '@/assets/stihl-logo.jpg';
@@ -12,7 +12,7 @@ const Header = () => {
     { path: '/', label: 'Inicio', icon: Home },
     { path: '/ficha-tecnica', label: 'Nueva Ficha', icon: FileText },
     { path: '/repuestos', label: 'Repuestos', icon: Package },
-    { path: '/ayuda', label: 'Ayuda', icon: HelpCircle },
+    { path: '/clientes', label: 'Clientes', icon: Users },
   ];
 
   return (
