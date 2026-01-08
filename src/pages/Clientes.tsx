@@ -1,12 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Cliente } from '@/types';
-import { getClientes, saveCliente, deleteCliente, generateId } from '@/lib/cloudStorage';
+import { Cliente, FichaTecnica } from '@/types';
+import { getClientes, saveCliente, deleteCliente, generateId, getFichasByClienteNombre } from '@/lib/cloudStorage';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
-import { Users, Plus, Trash2, Search, Edit2, Check, X } from 'lucide-react';
+import { Users, Plus, Trash2, Search, Edit2, Check, X, FileText, Calendar } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 const ClientesPage = () => {
   const { toast } = useToast();
@@ -14,6 +22,12 @@ const ClientesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // History
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
+  const [clientFichas, setClientFichas] = useState<FichaTecnica[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   // New cliente form
   const [nuevoNombre, setNuevoNombre] = useState('');
@@ -106,6 +120,22 @@ const ClientesPage = () => {
       } catch (error) {
         toast({ title: 'Error', description: 'Error al eliminar cliente', variant: 'destructive' });
       }
+    }
+  };
+
+  const handleViewHistory = async (cliente: Cliente) => {
+    setSelectedCliente(cliente);
+    setHistoryOpen(true);
+    setLoadingHistory(true);
+    setClientFichas([]); // Reset previous data
+    try {
+      const fichas = await getFichasByClienteNombre(cliente.nombre);
+      setClientFichas(fichas);
+    } catch (error) {
+      console.error('Error fetching history:', error);
+      toast({ title: 'Error', description: 'Error al cargar historial', variant: 'destructive' });
+    } finally {
+      setLoadingHistory(false);
     }
   };
 
@@ -245,6 +275,14 @@ const ClientesPage = () => {
                               <div className="flex gap-1">
                                 <Button
                                   size="sm"
+                                  variant="secondary"
+                                  onClick={() => handleViewHistory(cliente)}
+                                  title="Ver Historial"
+                                >
+                                  <FileText className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
                                   variant="outline"
                                   onClick={() => startEdit(cliente)}
                                 >
@@ -270,6 +308,62 @@ const ClientesPage = () => {
           </section>
         </div>
       </main>
+
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Historial de Servicios - {selectedCliente?.nombre}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="mt-4">
+            {loadingHistory ? (
+              <p className="text-center py-4 text-muted-foreground">Cargando historial...</p>
+            ) : clientFichas.length === 0 ? (
+              <p className="text-center py-4 text-muted-foreground">No hay fichas técnicas registradas para este cliente.</p>
+            ) : (
+              <div className="space-y-4">
+                {clientFichas.map((ficha) => (
+                  <div key={ficha.id} className="border rounded-lg p-4 bg-card hover:bg-accent/50 transition-colors">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <span className="font-bold text-lg">Boleta #{ficha.numeroBoleta}</span>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="h-3 w-3" />
+                          {format(ficha.fechaIngreso, "d 'de' MMMM, yyyy", { locale: es })}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="inline-block px-2 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary">
+                          {ficha.modeloMaquina}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="grid md:grid-cols-2 gap-4 mt-3 text-sm">
+                      <div>
+                        <span className="font-semibold block text-xs uppercase text-muted-foreground mb-1">Avería Reportada</span>
+                        <p>{ficha.tipoAveria || 'Sin detalles'}</p>
+                      </div>
+                      <div>
+                        <span className="font-semibold block text-xs uppercase text-muted-foreground mb-1">Repuestos Utilizados</span>
+                        {ficha.repuestos.length > 0 ? (
+                          <ul className="list-disc list-inside">
+                            {ficha.repuestos.map((r, idx) => (
+                              <li key={idx}>{r.cantidad}x {r.nombre}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="italic text-muted-foreground">Sin repuestos</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

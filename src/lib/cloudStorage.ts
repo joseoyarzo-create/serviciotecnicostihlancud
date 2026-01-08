@@ -177,6 +177,40 @@ export const saveModelo = async (modelo: { id: string; modelo: string }): Promis
 };
 
 // Fichas Técnicas
+export const getFichasByClienteNombre = async (nombre: string): Promise<FichaTecnica[]> => {
+  const { data, error } = await supabase
+    .from('fichas')
+    .select('*')
+    .eq('cliente_nombre', nombre)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching fichas by client:', error);
+    return [];
+  }
+
+  return data.map(f => ({
+    id: f.id,
+    numeroBoleta: f.numero_boleta,
+    numeroServicio: f.numero_boleta,
+    fechaIngreso: new Date(f.fecha_ingreso),
+    fechaReparacion: f.fecha_reparacion ? new Date(f.fecha_reparacion) : null,
+    fechaEntrega: f.fecha_entrega ? new Date(f.fecha_entrega) : null,
+    cliente: {
+      id: f.id,
+      nombre: f.cliente_nombre,
+      telefono: f.cliente_telefono || '',
+    },
+    modeloMaquina: f.modelo_maquina,
+    numeroSerie: f.numero_serie || '',
+    tipoAveria: f.observaciones || '',
+    repuestos: validateRepuestos(f.repuestos),
+    servicios: validateServicios(f.servicios),
+    recomendaciones: 'REPARACIÓN GARANTIZADA POR 10 DÍAS DE LA FECHA DE RETIRO',
+    tecnico: f.mecanico as 'JORGE' | 'JEAN',
+  }));
+};
+
 export const getFichas = async (): Promise<FichaTecnica[]> => {
   const { data, error } = await supabase
     .from('fichas')

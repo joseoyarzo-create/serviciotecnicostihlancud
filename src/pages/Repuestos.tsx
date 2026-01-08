@@ -89,33 +89,79 @@ const RepuestosPage = () => {
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as string[][];
+        const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[][];
+
+        if (!jsonData || jsonData.length === 0) {
+          toast({ title: 'Error', description: 'El archivo parece estar vacío', variant: 'destructive' });
+          return;
+        }
 
         const nuevosRepuestos: Repuesto[] = [];
         
-        // Skip header row if exists
-        const startRow = jsonData[0]?.some(cell => 
-          typeof cell === 'string' && 
-          (cell.toLowerCase().includes('codigo') || cell.toLowerCase().includes('nombre'))
-        ) ? 1 : 0;
+        // Find header row logic
+        let startRow = -1;
+        let codigoIdx = -1;
+        let nombreIdx = -1;
+        let precioIdx = -1;
+
+        // Search in first 10 rows for headers
+        for (let i = 0; i < Math.min(jsonData.length, 10); i++) {
+          const row = jsonData[i];
+          if (!row || !Array.isArray(row)) continue;
+          
+          const rowStr = row.map(c => String(c).toLowerCase());
+          const cIdx = rowStr.findIndex(c => c.includes('codigo') || c.includes('código') || c.includes('code'));
+          const nIdx = rowStr.findIndex(c => c.includes('nombre') || c.includes('descripcion') || c.includes('descripción'));
+          const pIdx = rowStr.findIndex(c => c.includes('precio') || c.includes('valor'));
+
+          if (cIdx !== -1 || nIdx !== -1) {
+            startRow = i + 1;
+            codigoIdx = cIdx !== -1 ? cIdx : 0;
+            nombreIdx = nIdx !== -1 ? nIdx : 1;
+            precioIdx = pIdx !== -1 ? pIdx : 2;
+            break;
+          }
+        }
+
+        // If no header found, assume row 0 is data if it has at least 2 columns
+        if (startRow === -1) {
+          if (jsonData[0] && jsonData[0].length >= 2) {
+            startRow = 0;
+            codigoIdx = 0;
+            nombreIdx = 1;
+            precioIdx = 2;
+          } else {
+             toast({ title: 'Error', description: 'No se pudo detectar el formato de columnas (Código, Nombre)', variant: 'destructive' });
+             return;
+          }
+        }
+
+        console.log(`Importing starting from row ${startRow}, Cols: [${codigoIdx}, ${nombreIdx}, ${precioIdx}]`);
 
         for (let i = startRow; i < jsonData.length; i++) {
           const row = jsonData[i];
-          if (!row || !row[0]) continue;
+          if (!row || !Array.isArray(row)) continue;
 
-          const codigo = String(row[0] || '').trim().toUpperCase();
-          const nombre = String(row[1] || row[0] || '').trim();
-          const precioRaw = row[2];
+          const codigoRaw = row[codigoIdx];
+          const nombreRaw = row[nombreIdx];
+          
+          if (!codigoRaw) continue;
+
+          const codigo = String(codigoRaw).trim().toUpperCase();
+          const nombre = nombreRaw ? String(nombreRaw).trim() : 'SIN NOMBRE';
+          
           let precio = 1;
-
-          if (precioRaw !== undefined && precioRaw !== null && precioRaw !== '') {
-            const parsed = parseInt(String(precioRaw).replace(/[^0-9]/g, ''));
-            if (!isNaN(parsed) && parsed > 0) {
-              precio = parsed;
-            }
+          if (precioIdx !== -1 && row[precioIdx] !== undefined) {
+             const precioRaw = row[precioIdx];
+             if (typeof precioRaw === 'number') {
+                precio = precioRaw;
+             } else {
+                const parsed = parseInt(String(precioRaw).replace(/[^0-9]/g, ''));
+                if (!isNaN(parsed) && parsed > 0) precio = parsed;
+             }
           }
 
-          if (codigo) {
+          if (codigo.length > 0) {
             nuevosRepuestos.push({
               id: generateId(),
               codigo,
