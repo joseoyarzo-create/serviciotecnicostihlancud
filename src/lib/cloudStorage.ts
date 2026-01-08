@@ -2,19 +2,32 @@ import { supabase } from '@/integrations/supabase/client';
 import { Cliente, Repuesto, FichaTecnica, ServicioItem, RepuestoFicha } from '@/types';
 import type { Json } from '@/integrations/supabase/types';
 
+const PAGE_SIZE = 1000;
+
+export const generateId = (): string => {
+  return crypto.randomUUID();
+};
+
 // Clientes
 export const getClientes = async (): Promise<Cliente[]> => {
-  const { data, error } = await supabase
-    .from('clientes')
-    .select('*')
-    .order('nombre');
-  
-  if (error) {
-    console.error('Error fetching clientes:', error);
-    return [];
+  const all: any[] = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from('clientes')
+      .select('*')
+      .order('nombre')
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) {
+      console.error('Error fetching clientes:', error);
+      break;
+    }
+    if (!data || data.length === 0) break;
+    all.push(...data);
+    if (data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
   }
-  
-  return data.map(c => ({
+  return all.map(c => ({
     id: c.id,
     nombre: c.nombre,
     telefono: c.telefono || '',
@@ -36,19 +49,38 @@ export const saveCliente = async (cliente: Cliente): Promise<void> => {
   }
 };
 
-// Repuestos
-export const getRepuestos = async (): Promise<Repuesto[]> => {
-  const { data, error } = await supabase
-    .from('repuestos')
-    .select('*')
-    .order('nombre');
+export const deleteCliente = async (id: string): Promise<void> => {
+  const { error } = await supabase
+    .from('clientes')
+    .delete()
+    .eq('id', id);
   
   if (error) {
-    console.error('Error fetching repuestos:', error);
-    return [];
+    console.error('Error deleting cliente:', error);
+    throw error;
   }
-  
-  return data.map(r => ({
+};
+
+// Repuestos
+export const getRepuestos = async (): Promise<Repuesto[]> => {
+  const all: any[] = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from('repuestos')
+      .select('*')
+      .order('nombre')
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) {
+      console.error('Error fetching repuestos:', error);
+      break;
+    }
+    if (!data || data.length === 0) break;
+    all.push(...data);
+    if (data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+  return all.map(r => ({
     id: r.id,
     codigo: r.codigo,
     nombre: r.nombre,
@@ -73,31 +105,18 @@ export const saveRepuesto = async (repuesto: Repuesto): Promise<void> => {
 };
 
 export const saveRepuestosBulk = async (nuevosRepuestos: Repuesto[]): Promise<void> => {
-  for (const repuesto of nuevosRepuestos) {
-    const { data: existing } = await supabase
-      .from('repuestos')
-      .select('id')
-      .eq('codigo', repuesto.codigo)
-      .maybeSingle();
-    
-    if (existing) {
-      await supabase
-        .from('repuestos')
-        .update({
-          nombre: repuesto.nombre,
-          precio: repuesto.precio,
-        })
-        .eq('id', existing.id);
-    } else {
-      await supabase
-        .from('repuestos')
-        .insert({
-          id: repuesto.id,
-          codigo: repuesto.codigo,
-          nombre: repuesto.nombre,
-          precio: repuesto.precio,
-        });
-    }
+  const payload = nuevosRepuestos.map(r => ({
+    id: r.id,
+    codigo: r.codigo,
+    nombre: r.nombre,
+    precio: r.precio,
+  }));
+  const { error } = await supabase
+    .from('repuestos')
+    .upsert(payload, { onConflict: 'codigo' });
+  if (error) {
+    console.error('Error bulk saving repuestos:', error);
+    throw error;
   }
 };
 

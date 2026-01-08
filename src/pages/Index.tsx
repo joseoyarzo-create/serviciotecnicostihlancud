@@ -4,8 +4,8 @@ import { FichaTecnica } from '@/types';
 import { getFichas, getRepuestos, getClientes, deleteFicha } from '@/lib/cloudStorage';
 import { generateWordDocument } from '@/lib/generateWord';
 import { generatePdfDocument, printFicha } from '@/lib/generatePdf';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import { Clock, Download, Edit, FileDown, FileText, Package, Plus, Printer, Search, Trash2, Users, Wrench } from 'lucide-react';
@@ -21,11 +21,15 @@ import {
 
 const Index = () => {
   const { toast } = useToast();
-  const [fichas, setFichas] = useState<FichaTecnica[]>([]);
   const [allFichas, setAllFichas] = useState<FichaTecnica[]>([]);
+  const [fichas, setFichas] = useState<FichaTecnica[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [stats, setStats] = useState({ repuestos: 0, clientes: 0, fichas: 0 });
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   useEffect(() => {
     if (searchTerm.trim() === '') {
@@ -40,10 +44,6 @@ const Index = () => {
       setFichas(filtered);
     }
   }, [searchTerm, allFichas]);
-
-  useEffect(() => {
-    loadData();
-  }, []);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -99,8 +99,8 @@ const Index = () => {
     if (window.confirm('¿Está seguro de eliminar esta ficha?')) {
       try {
         await deleteFicha(id);
-        await loadData();
         toast({ title: 'Éxito', description: 'Ficha eliminada' });
+        loadData();
       } catch (error) {
         toast({ title: 'Error', description: 'Error al eliminar ficha', variant: 'destructive' });
       }
@@ -108,96 +108,69 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-secondary/30">
       <Header />
-
+      
       <main className="container mx-auto py-8 px-4">
-        {/* Hero Section */}
-        <section className="text-center mb-12 animate-fade-in">
-          <div className="flex justify-center mb-6">
-            <img src={stihlLogo} alt="STIHL" className="h-24 object-contain" />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-heading font-bold mb-4">
-            Sistema de Taller
-          </h1>
-          <p className="text-xl text-muted-foreground mb-2">
-            STIHL ANCUD - COMERCIAL SOTAVENTO LTDA.
-          </p>
-          <p className="text-muted-foreground">
-            Pudeto 351 - Ancud | Fono Fax: 652622214
-          </p>
-        </section>
-
-        {/* Stats */}
-        <section className="grid md:grid-cols-3 gap-6 mb-12">
-          <div className="form-section hover-lift animate-fade-in" style={{ animationDelay: '0.1s' }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground text-sm uppercase tracking-wide">Fichas Técnicas</p>
-                <p className="text-4xl font-bold text-primary">{stats.fichas}</p>
-              </div>
-              <FileText className="h-12 w-12 text-primary/30" />
-            </div>
-          </div>
-          
-          <div className="form-section hover-lift animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground text-sm uppercase tracking-wide">Repuestos</p>
-                <p className="text-4xl font-bold text-primary">{stats.repuestos}</p>
-              </div>
-              <Package className="h-12 w-12 text-primary/30" />
-            </div>
-          </div>
-          
-          <div className="form-section hover-lift animate-fade-in" style={{ animationDelay: '0.3s' }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground text-sm uppercase tracking-wide">Clientes</p>
-                <p className="text-4xl font-bold text-primary">{stats.clientes}</p>
-              </div>
-              <Users className="h-12 w-12 text-primary/30" />
-            </div>
-          </div>
-        </section>
-
-        {/* Quick Actions */}
-        <section className="grid md:grid-cols-2 gap-6 mb-12">
-          <Link to="/ficha-tecnica">
-            <div className="form-section hover-lift cursor-pointer border-2 border-primary/20 hover:border-primary transition-colors animate-fade-in" style={{ animationDelay: '0.4s' }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <Link to="/ficha-tecnica" className="no-underline">
+            <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-border">
               <div className="flex items-center gap-4">
-                <div className="bg-primary rounded-full p-4">
-                  <Plus className="h-8 w-8 text-primary-foreground" />
+                <div className="p-3 bg-stihl-orange/10 rounded-full">
+                  <Plus className="h-6 w-6 text-stihl-orange" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">Nueva Ficha Técnica</h3>
-                  <p className="text-muted-foreground">Crear una nueva orden de servicio</p>
+                  <h3 className="font-semibold text-lg">Nueva Ficha</h3>
+                  <p className="text-sm text-muted-foreground">Ingresar equipo</p>
                 </div>
               </div>
             </div>
           </Link>
 
-          <Link to="/repuestos">
-            <div className="form-section hover-lift cursor-pointer border-2 border-border hover:border-primary transition-colors animate-fade-in" style={{ animationDelay: '0.5s' }}>
+          <Link to="/repuestos" className="no-underline">
+            <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-border">
               <div className="flex items-center gap-4">
-                <div className="bg-secondary rounded-full p-4">
-                  <Wrench className="h-8 w-8 text-secondary-foreground" />
+                <div className="p-3 bg-blue-500/10 rounded-full">
+                  <Package className="h-6 w-6 text-blue-500" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">Gestionar Repuestos</h3>
-                  <p className="text-muted-foreground">Importar, agregar o editar repuestos</p>
+                  <h3 className="font-semibold text-lg">Repuestos</h3>
+                  <p className="text-sm text-muted-foreground">{stats.repuestos} artículos</p>
                 </div>
               </div>
             </div>
           </Link>
-        </section>
 
-        {/* Recent Fichas */}
-        <section className="form-section animate-fade-in" style={{ animationDelay: '0.6s' }}>
-          <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-            <h2 className="form-section-title flex items-center gap-2 mb-0">
-              <Clock className="h-5 w-5" />
-              {searchTerm ? 'Resultados de búsqueda' : 'Fichas Recientes'}
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-border">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-green-500/10 rounded-full">
+                <Users className="h-6 w-6 text-green-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Clientes</h3>
+                <p className="text-sm text-muted-foreground">{stats.clientes} registrados</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-sm border border-border">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-500/10 rounded-full">
+                <Wrench className="h-6 w-6 text-purple-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Servicios</h3>
+                <p className="text-sm text-muted-foreground">{stats.fichas} totales</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border border-border overflow-hidden">
+          <div className="p-6 border-b border-border flex flex-col md:flex-row justify-between items-center gap-4">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Clock className="h-5 w-5 text-stihl-orange" />
+              Últimos Ingresos
             </h2>
             <div className="relative w-full md:w-72">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -209,57 +182,74 @@ const Index = () => {
               />
             </div>
           </div>
-          
-          {isLoading ? (
-            <p className="text-center text-muted-foreground py-8">
-              Cargando...
-            </p>
-          ) : fichas.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
-              No hay fichas técnicas. ¡Crea la primera!
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="stihl-table">
-                <thead>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-secondary/50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Boleta</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Fecha</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Cliente</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Equipo</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Estado</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-border">
+                {isLoading ? (
                   <tr>
-                    <th>Nº SERVICIO</th>
-                    <th>CLIENTE</th>
-                    <th>MODELO</th>
-                    <th>FECHA</th>
-                    <th>TÉCNICO</th>
-                    <th>ACCIONES</th>
+                    <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
+                      Cargando datos...
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {fichas.map((ficha) => (
-                    <tr key={ficha.id}>
-                      <td className="font-mono font-bold">{ficha.numeroServicio}</td>
-                      <td>{ficha.cliente.nombre}</td>
-                      <td>{ficha.modeloMaquina}</td>
-                      <td>{format(ficha.fechaIngreso, 'dd/MM/yyyy', { locale: es })}</td>
-                      <td>{ficha.tecnico}</td>
-                      <td>
-                        <div className="flex gap-1">
+                ) : fichas.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
+                      No se encontraron registros
+                    </td>
+                  </tr>
+                ) : (
+                  fichas.map((ficha) => (
+                    <tr key={ficha.id} className="hover:bg-secondary/20 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap font-medium text-stihl-orange">
+                        #{ficha.numeroBoleta}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {format(ficha.fechaIngreso, 'dd/MM/yyyy', { locale: es })}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{ficha.cliente.nombre}</div>
+                        <div className="text-xs text-muted-foreground">{ficha.cliente.telefono}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {ficha.modeloMaquina}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                          En Taller
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end gap-2">
+                          <Link to={`/ficha-tecnica/${ficha.id}`}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button size="sm" variant="outline">
-                                <Download className="h-4 w-4" />
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-600 hover:text-gray-700 hover:bg-gray-100">
+                                <FileText className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem asChild>
-                                <Link to={`/ficha-tecnica/${ficha.id}`} className="flex items-center cursor-pointer">
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  Editar
-                                </Link>
-                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleDownloadWord(ficha)}>
-                                <FileText className="mr-2 h-4 w-4" />
+                                <FileDown className="mr-2 h-4 w-4" />
                                 Descargar Word
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleDownloadPdf(ficha)}>
-                                <FileDown className="mr-2 h-4 w-4" />
+                                <Download className="mr-2 h-4 w-4" />
                                 Descargar PDF
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handlePrint(ficha)}>
@@ -268,9 +258,11 @@ const Index = () => {
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
-                          <Button
-                            size="sm"
-                            variant="destructive"
+
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
                             onClick={() => handleDelete(ficha.id)}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -278,22 +270,13 @@ const Index = () => {
                         </div>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-secondary text-secondary-foreground py-6 mt-12">
-        <div className="container mx-auto text-center">
-          <p className="text-sm">
-            STIHL ANCUD - Sistema de Taller © {new Date().getFullYear()}
-          </p>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </footer>
+      </main>
     </div>
   );
 };

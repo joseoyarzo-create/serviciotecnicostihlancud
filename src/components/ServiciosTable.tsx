@@ -26,8 +26,6 @@ export const DEFAULT_SERVICIOS: ServicioItem[] = [
   { nombre: 'PIÑÓN', revision: false, reparacion: false },
 ];
 
-
-
 const ServiciosTable = ({ servicios, onServiciosChange }: Props) => {
   const toggleRevision = (index: number) => {
     const updated = [...servicios];
