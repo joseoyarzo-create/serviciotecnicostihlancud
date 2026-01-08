@@ -18,6 +18,7 @@ const RepuestosPage = () => {
   const [maxPrice, setMaxPrice] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isImporting, setIsImporting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -82,6 +83,7 @@ const RepuestosPage = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    setIsImporting(true);
     const reader = new FileReader();
     reader.onload = async (e) => {
       try {
@@ -132,6 +134,7 @@ const RepuestosPage = () => {
             precioIdx = 2;
           } else {
              toast({ title: 'Error', description: 'No se pudo detectar el formato de columnas (Código, Nombre)', variant: 'destructive' });
+             setIsImporting(false);
              return;
           }
         }
@@ -174,21 +177,27 @@ const RepuestosPage = () => {
         if (nuevosRepuestos.length > 0) {
           await saveRepuestosBulk(nuevosRepuestos);
           await loadRepuestos();
-          toast({ title: 'Éxito', description: `${nuevosRepuestos.length} repuestos importados` });
+          toast({ title: 'Éxito', description: `${nuevosRepuestos.length} repuestos importados correctamente` });
         } else {
           toast({ title: 'Aviso', description: 'No se encontraron repuestos válidos en el archivo', variant: 'destructive' });
         }
       } catch (error) {
         console.error('Error parsing Excel:', error);
-        toast({ title: 'Error', description: 'Error al procesar el archivo Excel', variant: 'destructive' });
+        toast({ title: 'Error', description: 'Error al procesar el archivo Excel. Asegúrese de que sea un archivo válido.', variant: 'destructive' });
+      } finally {
+        setIsImporting(false);
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
       }
     };
+    reader.onerror = () => {
+      toast({ title: 'Error', description: 'Error al leer el archivo', variant: 'destructive' });
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
     reader.readAsArrayBuffer(file);
-    
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
   const startEdit = (repuesto: Repuesto) => {
@@ -309,9 +318,19 @@ const RepuestosPage = () => {
                 onClick={() => fileInputRef.current?.click()}
                 variant="outline"
                 className="hover-lift"
+                disabled={isImporting}
               >
-                <Upload className="mr-2 h-4 w-4" />
-                Seleccionar archivo Excel
+                {isImporting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                    Importando...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Seleccionar archivo Excel
+                  </>
+                )}
               </Button>
               <p className="text-sm text-muted-foreground self-center">
                 Formato esperado: Código | Nombre | Precio (opcional, si no hay se asigna $1)

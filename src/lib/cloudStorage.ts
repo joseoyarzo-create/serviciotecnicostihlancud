@@ -105,18 +105,24 @@ export const saveRepuesto = async (repuesto: Repuesto): Promise<void> => {
 };
 
 export const saveRepuestosBulk = async (nuevosRepuestos: Repuesto[]): Promise<void> => {
-  const payload = nuevosRepuestos.map(r => ({
-    id: r.id,
-    codigo: r.codigo,
-    nombre: r.nombre,
-    precio: r.precio,
-  }));
-  const { error } = await supabase
-    .from('repuestos')
-    .upsert(payload, { onConflict: 'codigo' });
-  if (error) {
-    console.error('Error bulk saving repuestos:', error);
-    throw error;
+  const CHUNK_SIZE = 500;
+  for (let i = 0; i < nuevosRepuestos.length; i += CHUNK_SIZE) {
+    const chunk = nuevosRepuestos.slice(i, i + CHUNK_SIZE);
+    const payload = chunk.map(r => ({
+      id: r.id,
+      codigo: r.codigo,
+      nombre: r.nombre,
+      precio: r.precio,
+    }));
+    
+    const { error } = await supabase
+      .from('repuestos')
+      .upsert(payload, { onConflict: 'codigo' });
+      
+    if (error) {
+      console.error(`Error bulk saving repuestos (chunk ${i}-${i+CHUNK_SIZE}):`, error);
+      throw error;
+    }
   }
 };
 
