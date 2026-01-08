@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -30,6 +30,7 @@ const FichaTecnicaPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(!!id);
   const [exportType, setExportType] = useState<'word' | 'pdf' | 'print'>('word');
+  const exportTypeRef = useRef<'word' | 'pdf' | 'print'>('word');
 
   // Form state
   const [numeroBoleta, setNumeroBoleta] = useState('');
@@ -130,6 +131,11 @@ const FichaTecnicaPage = () => {
       return;
     }
     setModeloMaquina(modelo);
+  };
+
+  const onFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSubmit(exportTypeRef.current);
   };
 
   const handleSubmit = async (type: 'word' | 'pdf' | 'print') => {
@@ -244,7 +250,7 @@ const FichaTecnicaPage = () => {
           <h1 className="text-3xl font-heading font-bold">{id ? 'Editar Ficha Técnica' : 'Nueva Ficha Técnica'}</h1>
         </div>
 
-        <div className="grid gap-6">
+        <form className="grid gap-6" onSubmit={onFormSubmit}>
           {/* Datos del Servicio */}
           <section className="form-section animate-fade-in">
             <h2 className="form-section-title flex items-center gap-2">
@@ -255,6 +261,7 @@ const FichaTecnicaPage = () => {
               <div className="input-group">
                 <Label className="input-label">Nº Boleta *</Label>
                 <Input
+                  required
                   value={numeroBoleta}
                   onChange={(e) => setNumeroBoleta(e.target.value)}
                   placeholder="Ej: 12345"
@@ -358,6 +365,7 @@ const FichaTecnicaPage = () => {
               <div className="input-group">
                 <Label className="input-label">Nombre *</Label>
                 <Input
+                  required
                   value={clienteNombre}
                   onChange={(e) => setClienteNombre(e.target.value)}
                   placeholder="Nombre del cliente"
@@ -476,7 +484,11 @@ const FichaTecnicaPage = () => {
           {/* Submit Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 animate-fade-in">
             <Button
-              onClick={() => handleSubmit('word')}
+              type="submit"
+              onClick={() => {
+                setExportType('word');
+                exportTypeRef.current = 'word';
+              }}
               disabled={isLoading}
               size="lg"
               className="flex-1 hover-lift"
@@ -486,7 +498,11 @@ const FichaTecnicaPage = () => {
             </Button>
             
             <Button
-              onClick={() => handleSubmit('pdf')}
+              type="submit"
+              onClick={() => {
+                setExportType('pdf');
+                exportTypeRef.current = 'pdf';
+              }}
               disabled={isLoading}
               size="lg"
               variant="secondary"
@@ -497,7 +513,11 @@ const FichaTecnicaPage = () => {
             </Button>
             
             <Button
-              onClick={() => handleSubmit('print')}
+              type="submit"
+              onClick={() => {
+                setExportType('print');
+                exportTypeRef.current = 'print';
+              }}
               disabled={isLoading}
               size="lg"
               variant="outline"
@@ -507,7 +527,7 @@ const FichaTecnicaPage = () => {
               {isLoading && exportType === 'print' ? 'Imprimiendo...' : 'Guardar e Imprimir'}
             </Button>
           </div>
-        </div>
+        </form>
       </main>
     </div>
   );

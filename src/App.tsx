@@ -10,6 +10,7 @@ import FichaTecnica from "./pages/FichaTecnica";
 import Repuestos from "./pages/Repuestos";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import Ayuda from "./pages/Ayuda";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/ficha-tecnica" element={<ProtectedRoute><FichaTecnica /></ProtectedRoute>} />
             <Route path="/ficha-tecnica/:id" element={<ProtectedRoute><FichaTecnica /></ProtectedRoute>} />
             <Route path="/repuestos" element={<ProtectedRoute><Repuestos /></ProtectedRoute>} />
+            <Route path="/ayuda" element={<ProtectedRoute><Ayuda /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

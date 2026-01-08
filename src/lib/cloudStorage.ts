@@ -172,8 +172,8 @@ export const getFichas = async (): Promise<FichaTecnica[]> => {
     modeloMaquina: f.modelo_maquina,
     numeroSerie: f.numero_serie || '',
     tipoAveria: f.observaciones || '',
-    repuestos: (Array.isArray(f.repuestos) ? f.repuestos : []) as unknown as RepuestoFicha[],
-    servicios: (Array.isArray(f.servicios) ? f.servicios : []) as unknown as ServicioItem[],
+    repuestos: validateRepuestos(f.repuestos),
+    servicios: validateServicios(f.servicios),
     recomendaciones: 'REPARACIÓN GARANTIZADA POR 10 DÍAS DE LA FECHA DE RETIRO',
     tecnico: f.mecanico as 'JORGE' | 'JEAN',
   }));
@@ -206,11 +206,33 @@ export const getFichaById = async (id: string): Promise<FichaTecnica | null> => 
     modeloMaquina: data.modelo_maquina,
     numeroSerie: data.numero_serie || '',
     tipoAveria: data.observaciones || '',
-    repuestos: (Array.isArray(data.repuestos) ? data.repuestos : []) as unknown as RepuestoFicha[],
-    servicios: (Array.isArray(data.servicios) ? data.servicios : []) as unknown as ServicioItem[],
+    repuestos: validateRepuestos(data.repuestos),
+    servicios: validateServicios(data.servicios),
     recomendaciones: 'REPARACIÓN GARANTIZADA POR 10 DÍAS DE LA FECHA DE RETIRO',
     tecnico: data.mecanico as 'JORGE' | 'JEAN',
   };
+};
+
+// Helper functions for validation
+const validateRepuestos = (json: Json | null): RepuestoFicha[] => {
+  if (!Array.isArray(json)) return [];
+  return json.map((item: any) => ({
+    id: item.id || '',
+    codigo: item.codigo || '',
+    nombre: item.nombre || '',
+    precio: Number(item.precio) || 0,
+    cantidad: Number(item.cantidad) || 1,
+    precioEditado: item.precioEditado ? Number(item.precioEditado) : undefined
+  })).filter(r => r.id && r.codigo);
+};
+
+const validateServicios = (json: Json | null): ServicioItem[] => {
+  if (!Array.isArray(json)) return [];
+  return json.map((item: any) => ({
+    nombre: item.nombre || '',
+    revision: Boolean(item.revision),
+    reparacion: Boolean(item.reparacion)
+  }));
 };
 
 export const saveFicha = async (ficha: FichaTecnica): Promise<void> => {

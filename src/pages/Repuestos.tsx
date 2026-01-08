@@ -16,6 +16,8 @@ const RepuestosPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // New repuesto form
   const [nuevoCodigo, setNuevoCodigo] = useState('');
@@ -43,6 +45,10 @@ const RepuestosPage = () => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, minPrice, maxPrice]);
 
   const handleAddRepuesto = async () => {
     if (!nuevoCodigo.trim() || !nuevoNombre.trim()) {
@@ -192,6 +198,18 @@ const RepuestosPage = () => {
       r.codigo.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredRepuestos.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedRepuestos = filteredRepuestos.slice(startIndex, startIndex + itemsPerPage);
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -280,15 +298,33 @@ const RepuestosPage = () => {
               Inventario de Repuestos ({repuestos.length})
             </h2>
 
-            {/* Search */}
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por código o nombre..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+            {/* Search and Filter */}
+            <div className="flex flex-col md:flex-row gap-4 mb-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por código o nombre..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="flex gap-2 w-full md:w-auto">
+                <Input
+                  type="number"
+                  placeholder="Precio min"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  className="w-full md:w-32"
+                />
+                <Input
+                  type="number"
+                  placeholder="Precio max"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  className="w-full md:w-32"
+                />
+              </div>
             </div>
 
             {/* Table */}
@@ -316,7 +352,7 @@ const RepuestosPage = () => {
                       </td>
                     </tr>
                   ) : (
-                    filteredRepuestos.map((repuesto) => (
+                    paginatedRepuestos.map((repuesto) => (
                       <tr key={repuesto.id}>
                         {editingId === repuesto.id ? (
                           <>
@@ -394,6 +430,41 @@ const RepuestosPage = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination */}
+            {filteredRepuestos.length > itemsPerPage && (
+              <div className="flex items-center justify-between mt-4">
+                <div className="text-sm text-muted-foreground">
+                  Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, filteredRepuestos.length)} de {filteredRepuestos.length} repuestos
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={goToPreviousPage}
+                    disabled={currentPage === 1}
+                  >
+                    Anterior
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled
+                    className="w-10 font-mono"
+                  >
+                    {currentPage}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages}
+                  >
+                    Siguiente
+                  </Button>
+                </div>
+              </div>
+            )}
           </section>
         </div>
       </main>

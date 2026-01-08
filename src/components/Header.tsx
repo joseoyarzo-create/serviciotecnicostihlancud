@@ -12,6 +12,7 @@ const Header = () => {
     { path: '/', label: 'Inicio', icon: Home },
     { path: '/ficha-tecnica', label: 'Nueva Ficha', icon: FileText },
     { path: '/repuestos', label: 'Repuestos', icon: Package },
+    { path: '/ayuda', label: 'Ayuda', icon: HelpCircle },
   ];
 
   return (
