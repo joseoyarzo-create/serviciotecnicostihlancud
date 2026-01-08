@@ -341,10 +341,8 @@ export const incrementContador = async (): Promise<void> => {
   }
 };
 
-// Generate ID helper
-export const generateId = (): string => {
-  return crypto.randomUUID();
-};
+// Generate ID helper removed (duplicate)
+
 
 export const getNextFolio = async (): Promise<string> => {
   try {
